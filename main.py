@@ -3,6 +3,7 @@ import pygame as pg
 import threading
 import math
 from solution import Backtrack
+from matrix import matrix
 
 pg.init()
 Font = pg.font.SysFont("impact", 45)
@@ -10,16 +11,7 @@ Font_2 = pg.font.SysFont("arial", 25)
 
 
 threads = []
-grid = np.array([[0,0,0,0,0,1,2,0,0],
-                 [0,0,0,0,0,0,3,4,0],
-                 [0,0,0,0,0,0,0,5,6],
-                 [0,0,0,0,0,0,0,0,7],
-                 [0,0,0,0,0,0,0,0,0],
-                 [1,0,0,0,0,0,0,0,0],
-                 [7,2,0,0,0,0,0,0,0],
-                 [0,4,8,0,0,0,0,0,0],
-                 [0,0,6,3,0,0,0,0,0]
-                 ])
+grid = np.copy(matrix)
 sub_grid = {"a" : (0,1,2),"b" : (3,4,5),"c" : (6,7,8)}
 
 
@@ -140,13 +132,14 @@ def check(grid, num, x, y):
 
 
 
-def display_all(WIN, grids, button1, warning1):
+def display_all(WIN, grids, button1, button2, warning1):
 
      grids.draw(WIN)
      grids.set(WIN, grid)
      grids.draw_selection_grid(WIN)
      button1.draw(WIN)
      warning1.show(WIN)
+     button2.draw(WIN)
 
 
 
@@ -204,6 +197,7 @@ def main():
     play = True
     grids = Grid(9)
     button1 = Button(10, 610, 150, 80, (0,0,255), "solve")
+    button2 = Button(440, 610, 150, 80, (180, 40, 40), "Reset")
     warning1 = Warnings("Not possible!!!", 250, 630)
     gameover = False
 
@@ -223,13 +217,16 @@ def main():
                         gameover = True
                         solve_button()
                         break
+                    elif button2.state == "Active":
+                        grid = np.copy(matrix)
+                        break
                     else:
                         break
                 else:
                     break
 
         
-        display_all(WIN, grids, button1, warning1)
+        display_all(WIN, grids, button1, button2, warning1)
         
         pg.display.update()
 
