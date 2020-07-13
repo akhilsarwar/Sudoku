@@ -6,6 +6,7 @@ from solution import Backtrack
 
 pg.init()
 Font = pg.font.SysFont("impact", 45)
+Font_2 = pg.font.SysFont("arial", 25)
 
 
 threads = []
@@ -29,9 +30,12 @@ class Grid:
 
     def draw(self, WIN):
         for i in range(self.n):
-            pg.draw.line(WIN, (178,34,34), (0, round((600/self.n)*(i+1))), (600, round((600/self.n)*(i+1))), 1)
-            pg.draw.line(WIN, (178,34,34), (round((600/self.n)*(i+1)), 0), (round((600/self.n)*(i+1)), 600), 1)
-        
+            if i not in [2,5,8]:
+                pg.draw.line(WIN, (178,34,34), (0, round((600/self.n)*(i+1))), (600, round((600/self.n)*(i+1))), 1)
+                pg.draw.line(WIN, (178,34,34), (round((600/self.n)*(i+1)), 0), (round((600/self.n)*(i+1)), 600), 1)
+            else:
+                pg.draw.line(WIN, (220,140,0), (0, round((600/self.n)*(i+1))), (600, round((600/self.n)*(i+1))), 3)
+                pg.draw.line(WIN, (220,140,0), (round((600/self.n)*(i+1)), 0), (round((600/self.n)*(i+1)), 600), 3)
 
 
     def set(self, WIN, grid):
@@ -86,7 +90,21 @@ class Button:
         WIN.blit(text, (self.x + (self.length-text.get_width())/2, self.y + (self.breadth - text.get_height())/2)) 
 
 
-    
+class Warnings:
+    def __init__(self, text, x, y):
+        self.txt = text
+        self.x = x
+        self.y = y
+        self.state = "Inactive"
+
+    def show(self, WIN):
+        if self.state == "Active":
+            text = Font_2.render(self.txt, True, (210, 0, 0))
+            WIN.blit(text, (self.x, self.y))
+
+
+
+
 def check(grid, num, x, y):
 
     global sub_grid
@@ -122,12 +140,14 @@ def check(grid, num, x, y):
 
 
 
-def display_all(WIN, grids, button1):
+def display_all(WIN, grids, button1, warning1):
 
      grids.draw(WIN)
      grids.set(WIN, grid)
      grids.draw_selection_grid(WIN)
      button1.draw(WIN)
+     warning1.show(WIN)
+
 
 
      
@@ -138,20 +158,27 @@ def solve():
         print("solution not possible")
 
 
-def gameplay(grids):
+def gameplay(grids, warning1):
     try:
         _, _, cell_x, cell_y,  = grids.selection_grid()
     except TypeError:
         return False
 
+    warning1.state = "Inactive"
     get_input = True
+
     while get_input:
         for event in pg.event.get():
             if event.type == pg.KEYDOWN:
                 if event.key in [pg.K_1, pg.K_2, pg.K_3, pg.K_4, pg.K_5, pg.K_6 ,pg.K_7 ,pg.K_8 ,pg.K_9]:
                     num=int(chr(event.key))
-                    grid[cell_x, cell_y] = num
-                    return True
+                    if check(grid, num, cell_x, cell_y):
+                        grid[cell_x, cell_y] = num
+                        
+                    else:
+                        warning1.state = "Active"
+                    return True    
+                        
                 else:
                     return False
     
@@ -171,12 +198,13 @@ def main():
 
     display = (600,700)
     WIN = pg.display.set_mode(display)
+    pg.display.set_caption("SUDOKU")
+
     global grid
     play = True
-
-
     grids = Grid(9)
     button1 = Button(10, 610, 150, 80, (0,0,255), "solve")
+    warning1 = Warnings("Not possible!!!", 250, 630)
     gameover = False
 
     #game loop
@@ -190,7 +218,7 @@ def main():
                 play = False
 
             if event.type == pg.MOUSEBUTTONDOWN and not gameover:
-                if not gameplay(grids):
+                if not gameplay(grids, warning1):
                     if button1.state == "Active":
                         gameover = True
                         solve_button()
@@ -201,7 +229,7 @@ def main():
                     break
 
         
-        display_all(WIN, grids, button1)
+        display_all(WIN, grids, button1, warning1)
         
         pg.display.update()
 
