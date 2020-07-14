@@ -15,6 +15,7 @@ grid = np.copy(matrix)
 sub_grid = {"a" : (0,1,2),"b" : (3,4,5),"c" : (6,7,8)}
 
 
+
 class Grid:
     def __init__(self, n):
         self.n = n
@@ -60,6 +61,7 @@ class Grid:
             pass
 
 
+
 class Button:
     def __init__(self, x, y, l, b, color, text):
         self.length = l
@@ -82,6 +84,7 @@ class Button:
         WIN.blit(text, (self.x + (self.length-text.get_width())/2, self.y + (self.breadth - text.get_height())/2)) 
 
 
+
 class Warnings:
     def __init__(self, text, x, y):
         self.txt = text
@@ -93,7 +96,6 @@ class Warnings:
         if self.state == "Active":
             text = Font_2.render(self.txt, True, (210, 0, 0))
             WIN.blit(text, (self.x, self.y))
-
 
 
 
@@ -132,26 +134,16 @@ def check(grid, num, x, y):
 
 
 
-def display_all(WIN, grids, button1, button2, warning1):
-
-     grids.draw(WIN)
-     grids.set(WIN, grid)
-     grids.draw_selection_grid(WIN)
-     button1.draw(WIN)
-     warning1.show(WIN)
-     button2.draw(WIN)
 
 
-
-     
-def solve():
-    if Backtrack(grid, check):
-        print(grid)
-    else:
-        print("solution not possible")
 
 
 def gameplay(grids, warning1):
+
+    #function takes an input from keyboard 
+    #assign the new value to grid after calling check()
+
+
     try:
         _, _, cell_x, cell_y,  = grids.selection_grid()
     except TypeError:
@@ -174,15 +166,37 @@ def gameplay(grids, warning1):
                         
                 else:
                     return False
-    
-        
+
+
+ 
+def solve():
+
+    #solves the sudoku using backtracking algo
+
+    if Backtrack(grid, check):
+        print(grid)
+    else:
+        print("solution not possible")        
+
+
 
 def solve_button():
+
+    # assign the thread for backtracking
+
     global threads
     threads.append(threading.Thread(target=solve, daemon=True))
     threads[-1].start()
 
 
+def display_all(WIN, grids, button1, button2, warning1):
+
+     grids.draw(WIN)
+     grids.set(WIN, grid)
+     grids.draw_selection_grid(WIN)
+     button1.draw(WIN)
+     warning1.show(WIN)
+     button2.draw(WIN)
 
 
 
