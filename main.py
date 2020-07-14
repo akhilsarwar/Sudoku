@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pygame as pg
 import threading
@@ -6,6 +7,7 @@ from solution import Backtrack
 from matrix import matrix
 
 pg.init()
+IMG = pg.transform.smoothscale(pg.image.load(os.path.join("icons", "undo_64.png")), (35,35))
 Font = pg.font.SysFont("impact", 45)
 Font_2 = pg.font.SysFont("arial", 25)
 
@@ -13,6 +15,7 @@ Font_2 = pg.font.SysFont("arial", 25)
 threads = []
 grid = np.copy(matrix)
 sub_grid = {"a" : (0,1,2),"b" : (3,4,5),"c" : (6,7,8)}
+data = []
 
 
 
@@ -46,7 +49,6 @@ class Grid:
             for j in range(9):
                 centre_x, centre_y = round((j+0.5)*(600/self.n)), round((i+0.5)*(600/self.n))
                 if abs(m_x - centre_x) in range(0, round((600/self.n)*0.5)) and abs(m_y - centre_y) in range(0, round((600/self.n)*0.5)):
-                    print(grid[i,j])
                     return centre_x, centre_y, i, j
         
 
@@ -59,6 +61,31 @@ class Grid:
         
         except TypeError:
             pass
+
+class Image:
+    def __init__(self, x, y, image):
+        self.x = x
+        self.y = y
+        self.img = image
+        self.mask = self.create_mask()
+
+    def create_mask(self):
+        return pg.mask.from_surface(self.img)
+
+    def show(self, WIN):
+        if self.selection() == 1:
+            WIN.blit(pg.transform.smoothscale(self.img, (44,44)), (self.x, self.y))
+        else:
+            WIN.blit(self.img, (self.x, self.y))
+    
+    def selection(self):
+        pos_x, pos_y = pg.mouse.get_pos()
+        try:
+            mask_val = self.mask.get_at((pos_x-self.x, pos_y-self.y))
+        except IndexError:
+            return 0
+        return mask_val
+
 
 
 
@@ -143,7 +170,7 @@ def gameplay(grids, warning1):
     #function takes an input from keyboard 
     #assign the new value to grid after calling check()
 
-
+    global data
     try:
         _, _, cell_x, cell_y,  = grids.selection_grid()
     except TypeError:
@@ -159,6 +186,7 @@ def gameplay(grids, warning1):
                     num=int(chr(event.key))
                     if check(grid, num, cell_x, cell_y):
                         grid[cell_x, cell_y] = num
+                        data.append([num, cell_x, cell_y])
                         
                     else:
                         warning1.state = "Active"
@@ -166,6 +194,19 @@ def gameplay(grids, warning1):
                         
                 else:
                     return False
+
+def undo(image, grid):
+    global data
+    if image.selection():
+        try:
+            undo_num, undo_x, undo_y = data[-1]
+        except IndexError:
+            return 
+        grid[undo_x, undo_y] = 0
+        data.pop(-1)
+        return True
+    return   
+
 
 
  
@@ -189,7 +230,7 @@ def solve_button():
     threads[-1].start()
 
 
-def display_all(WIN, grids, button1, button2, warning1):
+def display_all(WIN, grids, button1, button2, warning1, image):
 
      grids.draw(WIN)
      grids.set(WIN, grid)
@@ -197,6 +238,8 @@ def display_all(WIN, grids, button1, button2, warning1):
      button1.draw(WIN)
      warning1.show(WIN)
      button2.draw(WIN)
+     image.show(WIN)
+
 
 
 
@@ -213,6 +256,7 @@ def main():
     button1 = Button(10, 610, 150, 80, (0,0,255), "solve")
     button2 = Button(440, 610, 150, 80, (180, 40, 40), "Reset")
     warning1 = Warnings("Not possible!!!", 250, 630)
+    image = Image(180, 634, IMG)
     gameover = False
 
     #game loop
@@ -226,6 +270,8 @@ def main():
                 play = False
 
             if event.type == pg.MOUSEBUTTONDOWN and not gameover:
+
+
                 if not gameplay(grids, warning1):
                     if button1.state == "Active":
                         gameover = True
@@ -235,12 +281,13 @@ def main():
                         grid = np.copy(matrix)
                         break
                     else:
+                        undo(image, grid)
                         break
-                else:
-                    break
+                
+                
 
         
-        display_all(WIN, grids, button1, button2, warning1)
+        display_all(WIN, grids, button1, button2, warning1, image)
         
         pg.display.update()
 
