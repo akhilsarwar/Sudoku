@@ -208,29 +208,28 @@ def undo(image, grid):
     return   
 
 
-
  
-def solve():
+def solve(warning):
 
     #solves the sudoku using backtracking algo
 
     if Backtrack(grid, check):
         print(grid)
     else:
-        print("solution not possible")        
+        warning.state = 'Active'  
 
 
 
-def solve_button():
+def solve_button(warning):
 
     # assign the thread for backtracking
 
     global threads
-    threads.append(threading.Thread(target=solve, daemon=True))
+    threads.append(threading.Thread(target=solve, daemon=True, args = (warning,)))
     threads[-1].start()
 
 
-def display_all(WIN, grids, button1, button2, warning1, image):
+def display_all(WIN, grids, button1, button2, warning1, warning2, image):
 
      grids.draw(WIN)
      grids.set(WIN, grid)
@@ -239,6 +238,7 @@ def display_all(WIN, grids, button1, button2, warning1, image):
      warning1.show(WIN)
      button2.draw(WIN)
      image.show(WIN)
+     warning2.show(WIN)
 
 
 
@@ -256,6 +256,7 @@ def main():
     button1 = Button(10, 610, 150, 80, (0,0,255), "solve")
     button2 = Button(440, 610, 150, 80, (180, 40, 40), "Reset")
     warning1 = Warnings("Not possible!!!", 250, 630)
+    warning2 = Warnings("Solution not possible", 250, 630)
     image = Image(180, 634, IMG)
     gameover = False
 
@@ -271,11 +272,14 @@ def main():
 
             if event.type == pg.MOUSEBUTTONDOWN and not gameover:
 
+            	if warning2.state == 'Active':
+            		warning2.state = 'Inactive'
+            	if warning1.state == 'Active':
+            		warning1.state = 'Inactive'
 
-                if not gameplay(grids, warning1):
+            	if not gameplay(grids, warning1):
                     if button1.state == "Active":
-                        gameover = True
-                        solve_button()
+                        solve_button(warning2)
                         break
                     elif button2.state == "Active":
                         grid = np.copy(matrix)
@@ -287,7 +291,7 @@ def main():
                 
 
         
-        display_all(WIN, grids, button1, button2, warning1, image)
+        display_all(WIN, grids, button1, button2, warning1, warning2, image)
         
         pg.display.update()
 
